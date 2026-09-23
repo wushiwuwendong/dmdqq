@@ -1,48 +1,54 @@
-<view class="map-page">
+<view class="map-page" style="width: {{canvasWidth}}px; height: {{canvasHeight}}px;">
   <canvas
-    type="webgl"
-    id="webgl"
-    class="webgl"
-    bindtouchstart="noop"
+    canvas-id="mapCanvas"
+    id="mapCanvas"
+    class="map-canvas"
+    style="width: {{canvasWidth}}px; height: {{canvasHeight}}px;"
+    disable-scroll="true"
   ></canvas>
 
-  <view class="hud">
-    <text class="hud-nick">{{nickName}}</text>
-    <text class="hud-hint">方向键移动角色</text>
-  </view>
+  <!-- canvas 是原生组件，普通 view 点不到，必须用 cover-view -->
+  <cover-view class="hud">
+    <cover-view class="hud-nick">{{nickName}}</cover-view>
+    <cover-view class="hud-hint">{{hint}}</cover-view>
+  </cover-view>
 
-  <view class="dpad">
-    <view class="dpad-row">
-      <view
+  <cover-view class="dpad">
+    <cover-view class="dpad-row">
+      <cover-view
         class="key"
         data-dir="up"
-        bindtouchstart="onDirStart"
-        bindtouchend="onDirEnd"
-        bindtouchcancel="onDirEnd"
-      >上</view>
-    </view>
-    <view class="dpad-row">
-      <view
+        catchtouchstart="onDirStart"
+        catchtouchend="onDirEnd"
+        catchtouchcancel="onDirEnd"
+        catchtap="onDirTap"
+      >上</cover-view>
+    </cover-view>
+    <cover-view class="dpad-row">
+      <cover-view
         class="key"
         data-dir="left"
-        bindtouchstart="onDirStart"
-        bindtouchend="onDirEnd"
-        bindtouchcancel="onDirEnd"
-      >左</view>
-      <view
+        catchtouchstart="onDirStart"
+        catchtouchend="onDirEnd"
+        catchtouchcancel="onDirEnd"
+        catchtap="onDirTap"
+      >左</cover-view>
+      <cover-view
         class="key"
         data-dir="down"
-        bindtouchstart="onDirStart"
-        bindtouchend="onDirEnd"
-        bindtouchcancel="onDirEnd"
-      >下</view>
-      <view
+        catchtouchstart="onDirStart"
+        catchtouchend="onDirEnd"
+        catchtouchcancel="onDirEnd"
+        catchtap="onDirTap"
+      >下</cover-view>
+      <cover-view
         class="key"
         data-dir="right"
-        bindtouchstart="onDirStart"
-        bindtouchend="onDirEnd"
-        bindtouchcancel="onDirEnd"
-      >右</view>
-    </view>
-  </view>
+        catchtouchstart="onDirStart"
+        catchtouchend="onDirEnd"
+        catchtouchcancel="onDirEnd"
+        catchtap="onDirTap"
+      >右</cover-view>
+    </cover-view>
+  </cover-view>
 </view>

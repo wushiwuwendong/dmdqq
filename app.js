@@ -5,11 +5,7 @@ App({
     logs.unshift(Date.now())
     qq.setStorageSync('logs', logs)
 
-    qq.login({
-      success: () => {
-        // res.code 可发给服务端换 openId；本 demo 仅用前端用户信息
-      }
-    })
+    qq.login({ success() {} })
 
     qq.getSetting({
       success: (res) => {

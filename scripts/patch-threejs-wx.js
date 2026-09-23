@@ -1,0 +1,8 @@
+const fs = require('fs')
+const path = require('path')
+const p = path.join(__dirname, '../libs/threejs-miniprogram/index.js')
+let s = fs.readFileSync(p, 'utf8')
+s = s.replace(/wx\.getFileSystemManager/g, '(typeof wx!=="undefined"?wx:qq).getFileSystemManager')
+s = s.replace(/wx\.request\(/g, '(typeof wx!=="undefined"?wx:qq).request(')
+fs.writeFileSync(p, s)
+console.log('patched ok', p)

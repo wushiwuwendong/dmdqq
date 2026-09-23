@@ -1,34 +1,38 @@
-const { createScopedThreejs } = require('../../libs/threejs-miniprogram/index.js')
-const { createScene } = require('../../utils/scene.js')
+const { createMap2d } = require('../../utils/map2d.js')
 
 const app = getApp()
 
 Page({
   data: {
-    nickName: '玩家'
+    nickName: '玩家',
+    hint: '方向键移动角色',
+    canvasWidth: 375,
+    canvasHeight: 600
   },
 
-  _raf: 0,
-  _sceneApi: null,
-  _canvas: null,
+  _timer: 0,
+  _map: null,
   _running: false,
 
   onLoad() {
     const user = app.globalData.userInfo || {}
     const nickName = user.nickName || '游客'
-    this.setData({ nickName })
+    const sys = qq.getSystemInfoSync()
+    this.setData({
+      nickName,
+      canvasWidth: Math.floor(sys.windowWidth || 375),
+      canvasHeight: Math.floor(sys.windowHeight || 600)
+    })
   },
 
   onReady() {
-    this.initThree()
+    // QQ 小程序：用旧版 canvas-id + createCanvasContext（无 .node / WebGL）
+    setTimeout(() => this.initMap(), 50)
   },
 
   onUnload() {
     this.stopLoop()
-    if (this._sceneApi) {
-      this._sceneApi.dispose()
-      this._sceneApi = null
-    }
+    this._map = null
   },
 
   onHide() {
@@ -36,73 +40,55 @@ Page({
   },
 
   onShow() {
-    if (this._sceneApi && !this._running) {
-      this.startLoop()
-    }
+    if (this._map && !this._running) this.startLoop()
   },
 
-  initThree() {
-    const query = qq.createSelectorQuery()
-    query
-      .select('#webgl')
-      .node()
-      .exec((res) => {
-        if (!res || !res[0] || !res[0].node) {
-          qq.showToast({ title: '画布初始化失败', icon: 'none' })
-          return
-        }
-
-        const canvas = res[0].node
-        const sys = qq.getSystemInfoSync()
-        const dpr = sys.pixelRatio || 1
-        const width = sys.windowWidth
-        const height = sys.windowHeight
-
-        canvas.width = width * dpr
-        canvas.height = height * dpr
-
-        const THREE = createScopedThreejs(canvas)
-        this._canvas = canvas
-        this._sceneApi = createScene(THREE, canvas, {
-          nickName: this.data.nickName,
-          pixelRatio: dpr,
-          width,
-          height
-        })
-
-        this.startLoop()
+  initMap() {
+    try {
+      const ctx = qq.createCanvasContext('mapCanvas', this)
+      this._map = createMap2d({
+        ctx,
+        nickName: this.data.nickName,
+        width: this.data.canvasWidth,
+        height: this.data.canvasHeight
       })
+      this.setData({ hint: '方向键移动角色' })
+      this.startLoop()
+    } catch (e) {
+      console.error(e)
+      this.setData({ hint: '地图初始化失败' })
+      qq.showToast({ title: '地图初始化失败', icon: 'none' })
+    }
   },
 
   startLoop() {
-    if (!this._sceneApi || !this._canvas || this._running) return
+    if (!this._map || this._running) return
     this._running = true
-    const canvas = this._canvas
-    const tick = () => {
-      if (!this._running || !this._sceneApi) return
-      this._sceneApi.update()
-      this._raf = canvas.requestAnimationFrame(tick)
-    }
-    this._raf = canvas.requestAnimationFrame(tick)
+    this._timer = setInterval(() => {
+      if (this._running && this._map) this._map.update()
+    }, 33)
   },
 
   stopLoop() {
     this._running = false
-    if (this._canvas && this._raf) {
-      this._canvas.cancelAnimationFrame(this._raf)
-      this._raf = 0
+    if (this._timer) {
+      clearInterval(this._timer)
+      this._timer = 0
     }
   },
 
   onDirStart(e) {
-    const dir = e.currentTarget.dataset.dir
-    if (this._sceneApi) this._sceneApi.setDirection(dir, true)
+    const dir = (e.currentTarget.dataset && e.currentTarget.dataset.dir) || ''
+    if (dir && this._map) this._map.setDirection(dir, true)
   },
 
   onDirEnd(e) {
-    const dir = e.currentTarget.dataset.dir
-    if (this._sceneApi) this._sceneApi.setDirection(dir, false)
+    const dir = (e.currentTarget.dataset && e.currentTarget.dataset.dir) || ''
+    if (dir && this._map) this._map.setDirection(dir, false)
   },
 
-  noop() {}
+  onDirTap(e) {
+    const dir = (e.currentTarget.dataset && e.currentTarget.dataset.dir) || ''
+    if (dir && this._map) this._map.nudge(dir)
+  }
 })
